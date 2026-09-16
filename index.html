@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DV3 Atlas</title>
+<meta name="description" content="드래곤빌리지3 교배 계산기. 목표 드래곤의 부모 조합과 확률, 최단 교배 루트, 시도 횟수와 모래시계 비용, 교배 타이머, 내 컬렉션까지 한곳에서.">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#f7f5f0">
+<link rel="icon" href="images/icon/favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" href="images/icon/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="images/icon/apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
+<meta property="og:type" content="website">
+<meta property="og:title" content="DV3 Atlas · 드래곤빌리지3 교배 조합 계산기">
+<meta property="og:description" content="목표 드래곤의 부모 조합과 확률, 최단 교배 루트, 시도 횟수와 모래시계 비용, 교배 타이머, 내 컬렉션까지 한곳에서.">
+<meta property="og:image" content="https://dv3-atlas.github.io/images/icon/icon-512.png">
+<meta property="og:url" content="https://dv3-atlas.github.io/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Jua&family=Gowun+Dodum&display=swap">
+<link rel="stylesheet" href="css/app.css?v=202609160129">
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="./" title="DV3 Atlas 홈 (누르면 새로고침)" id="brandHome"><span class="crest" aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path d="M12 1.5c.9 5.6 4.9 9.6 10.5 10.5C16.9 12.9 12.9 16.9 12 22.5 11.1 16.9 7.1 12.9 1.5 12 7.1 11.1 11.1 7.1 12 1.5z"/></svg></span><span class="wordmark"><b>Atlas</b><small>Dragon Village 3 · 조합 도우미</small></span></a>
+    <span class="chip" title="반영된 게임 데이터 버전"><span class="dot"></span><span id="verText">v1.0.15</span></span>
+    <span class="spacer"></span>
+    <button class="btn" id="ownedBtn" type="button" title="내가 가진 드래곤 등록">✓ 보유 드래곤 <span class="cnt" id="ownedCnt">0</span></button>
+    <nav class="tabs" aria-label="도구">
+      <div class="tg"><span class="tg-l">교배</span>
+        <a class="tab main-tab" href="#breed" data-view="breed">교배 조합 <span class="badge">MAIN</span></a>
+        <a class="tab" href="#predict" data-view="predict">부모로 예측</a>
+        <a class="tab" href="#route" data-view="route">최단 루트</a>
+        <a class="tab" href="#tries" data-view="tries">시도·비용</a>
+        <a class="tab" href="#timer" data-view="timer">타이머</a>
+      </div>
+      <div class="tg"><span class="tg-l">육성</span>
+        <a class="tab" href="#gems" data-view="gems">젬 강화·추천</a>
+        <a class="tab" href="#gacha" data-view="gacha">뽑기 계산</a>
+        <a class="tab" href="#odds" data-view="odds">공식 확률표</a>
+      </div>
+      <div class="tg"><span class="tg-l">도감</span>
+        <a class="tab" href="#dex" data-view="dex">드래곤 도감</a>
+        <a class="tab" href="#collection" data-view="collection">내 컬렉션</a>
+      </div>
+      <div class="tg"><span class="tg-l">랭킹</span>
+        <a class="tab" href="#colo" data-view="colo">콜로 방어덱</a>
+        <a class="tab" href="#arena" data-view="arena">아레나</a>
+        <a class="tab" href="#meta" data-view="meta">아레나 통계</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ══════════ 교배 조합 (메인) ══════════ -->
+  <section class="view" id="view-breed">
+    <div class="hero">
+      <div class="hero-top">
+        <div class="hero-text">
+          <div class="eyebrow">🐉 교배 계산기</div>
+          <h1>어떤 <em>드래곤</em>을 만들고 싶나요?</h1>
+          <p>이름을 검색해 목표를 고르면 부모 조합과 확률, 교배시간을 바로 계산해요. 보유 드래곤을 등록하면 지금 당장 가능한 조합과 최단 루트까지 이어집니다. 검색창은 <kbd>/</kbd> 로 바로 갈 수 있어요.</p>
+        </div>
+        <div class="hero-show" id="heroShow" aria-label="지금 진행 중인 이벤트 드래곤"></div>
+      </div>
+      <div class="featured" id="featured"></div>
+      <div class="search" id="targetBox">
+        <span class="ico">🔍</span>
+        <input id="targetInput" type="text" placeholder="드래곤 이름 검색 (예: 라파엘, 헤이즈, 이그니스)" autocomplete="off" spellcheck="false"
+               role="combobox" aria-expanded="false" aria-controls="targetList" aria-autocomplete="list" aria-label="목표 드래곤 검색">
+        <button class="clear" id="targetClear" type="button" aria-label="목표 지우기" hidden>×</button>
+        <div class="dd" id="targetList" role="listbox" hidden></div>
+      </div>
+      <div class="recent" id="recent" hidden></div>
+    </div>
+
+    <div class="tiles" id="homeTiles">
+      <a class="tile" href="#route"><b>최단 교배 루트</b><span>보유 드래곤에서 목표까지 몇 단계가 필요한지, 각 단계의 조합과 확률을 계산합니다.</span></a>
+      <a class="tile" href="#tries"><b>시도 횟수·모래시계</b><span>이 확률이면 몇 번 돌려야 하는지, 시간과 모래시계가 얼마나 드는지 계산합니다.</span></a>
+      <a class="tile" href="#timer"><b>교배 타이머</b><span>진행 중인 교배의 남은 시간을 기록하고, 그 시간에 나올 수 있는 드래곤을 좁힙니다.</span></a>
+      <a class="tile" href="#collection"><b>내 컬렉션</b><span>도감 진행률과, 보유 드래곤만으로 가장 쉽게 얻을 수 있는 드래곤을 보여줍니다.</span></a>
+      <a class="tile" href="#dex"><b>드래곤 도감</b><span>132종의 속성·능력치·스킬·교배 정보를 한곳에서 찾아봅니다.</span></a>
+      <a class="tile" href="#meta"><b>아레나 통계</b><span>상위 구간에서 어떤 드래곤이 어떤 젬 세트·보주로 이기는지, 카운터와 시너지까지 시즌별로 정리합니다.</span></a>
+      <a class="tile" href="#gems"><b>젬 강화·추천</b><span>드래곤에게 값진 젬 서브 옵션 순서와, 강화 시 기대 상승·비용을 공식 확률표로 계산합니다.</span></a>
+    </div>
+
+    <section class="layout" id="workspace" hidden>
+      <aside class="panel">
+        <div class="card" id="targetCard"></div>
+        <details class="card cond" id="cond" open>
+          <summary><h2>조건</h2><span class="hint" id="condSummary"></span></summary>
+          <div class="row">
+            <div class="field" style="margin-top:0">
+              <label for="userLv">테이머 레벨 <span class="hint">비우면 제한 없음</span></label>
+              <input class="inp" id="userLv" type="number" min="1" max="99" inputmode="numeric" placeholder="전체">
+            </div>
+            <div class="field" style="margin-top:0">
+              <label for="royal">로얄클래스 <span class="hint">교배시간 감소</span></label>
+              <select class="inp" id="royal"></select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="guild">길드 버프 등급 <span class="hint">교배시간 감소 · 로얄클래스와 합산</span></label>
+            <select class="inp" id="guild"></select>
+          </div>
+          <div class="field">
+            <label>비밀 교배서 <span class="hint">없는 드래곤은 체크를 풀면 후보에서 빠져 확률이 게임과 같아집니다</span></label>
+            <div class="bks" id="books"></div>
+          </div>
+          <div class="field">
+            <label for="coInput">동시에 노릴 드래곤 <span class="hint">여러 마리 가능</span></label>
+            <div class="search sm" id="coBox"><span class="ico">＋</span>
+              <input class="inp" id="coInput" type="text" placeholder="이름 검색 후 선택" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="coList" aria-autocomplete="list">
+              <div class="dd" id="coList" role="listbox" hidden></div></div>
+            <div class="chips" id="coChips"></div>
+          </div>
+          <div class="field">
+            <label for="haveInput">부모로 꼭 쓸 드래곤 <span class="hint">이 드래곤이 들어간 조합만</span></label>
+            <div class="search sm" id="haveBox"><span class="ico">◎</span>
+              <input class="inp" id="haveInput" type="text" placeholder="이름 검색 후 선택" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="haveList" aria-autocomplete="list">
+              <div class="dd" id="haveList" role="listbox" hidden></div></div>
+            <div class="chips" id="haveChip"></div>
+          </div>
+          <div class="field">
+            <label class="switch" for="mineToggle"><span>보유 드래곤으로만 조합 <span class="hint" id="mineHint"></span></span><input type="checkbox" id="mineToggle"></label>
+          </div>
+          <div class="field">
+            <label for="minProb">최소 확률 <span class="hint">이보다 낮은 조합은 숨김</span></label>
+            <div class="range"><input id="minProb" type="range" min="0" max="100" step="1" value="0"><output id="minProbOut">0%</output></div>
+          </div>
+          <p class="note">확률은 게임의 교배 절차(고정 확률종 우선 배정, 티어별 상한, 나머지 가중치 분배)를 재현한 이론값입니다. 확률업 이벤트는 확인된 것만 반영됩니다.</p>
+        </details>
+      </aside>
+
+      <section class="results">
+        <div id="notices"></div>
+        <div class="summary" id="summary"></div>
+        <div class="toolbar">
+          <div class="count" id="count"></div>
+          <span class="spacer"></span>
+          <div class="seg" id="sortSeg" role="group" aria-label="정렬">
+            <button type="button" data-sort="prob-desc">확률 높은순</button>
+            <button type="button" data-sort="time-asc">시간 짧은순</button>
+            <button type="button" data-sort="prob-asc">확률 낮은순</button>
+            <button type="button" data-sort="time-desc">시간 긴순</button>
+          </div>
+        </div>
+        <ol class="list" id="list"></ol>
+        <div class="empty" id="empty" hidden></div>
+        <div class="more-wrap"><button class="btn" id="moreBtn" type="button" hidden></button></div>
+      </section>
+    </section>
+  </section>
+
+  <!-- ══════════ 부모로 예측 ══════════ -->
+  <section class="view" id="view-predict" hidden>
+    <div class="phead"><div><div class="eyebrow">Offspring Forecast</div><h1>부모 두 마리로 자손 예측</h1><p>지금 가진 두 마리를 넣으면 나올 수 있는 드래곤과 확률, 각각의 교배시간을 보여줍니다.</p></div></div>
+    <div class="two">
+      <div class="card"><h2>부모 A</h2>
+        <div class="search sm" id="pABox"><span class="ico">①</span><input class="inp" id="pAInput" type="text" placeholder="이름 검색" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="pAList" aria-autocomplete="list"><div class="dd" id="pAList" role="listbox" hidden></div></div>
+        <div id="pACard" style="margin-top:10px"></div></div>
+      <div class="card"><h2>부모 B</h2>
+        <div class="search sm" id="pBBox"><span class="ico">②</span><input class="inp" id="pBInput" type="text" placeholder="이름 검색" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="pBList" aria-autocomplete="list"><div class="dd" id="pBList" role="listbox" hidden></div></div>
+        <div id="pBCard" style="margin-top:10px"></div></div>
+    </div>
+    <div style="margin-top:14px" id="predictOut"><div class="empty">부모 두 마리를 고르면 결과가 여기에 나옵니다. 보유 드래곤은 검색 목록에서 <b>보유</b> 표시로 구분됩니다.</div></div>
+  </section>
+
+  <!-- ══════════ 최단 루트 ══════════ -->
+  <section class="view" id="view-route" hidden>
+    <div class="phead"><div><div class="eyebrow">Shortest Route</div><h1>목표까지 최단 교배 루트</h1><p>보유 드래곤에서 출발해 목표 드래곤까지 몇 단계의 교배가 필요한지 계산합니다. 단계 수를 먼저 줄이고, 같은 단계라면 확률이 높은 조합을 고릅니다.</p></div></div>
+    <div class="card">
+      <div class="row">
+        <div class="field" style="margin-top:0"><label for="routeInput">목표 드래곤</label>
+          <div class="search sm" id="routeBox"><span class="ico">🎯</span><input class="inp" id="routeInput" type="text" placeholder="이름 검색" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="routeList" aria-autocomplete="list"><div class="dd" id="routeList" role="listbox" hidden></div></div></div>
+        <div class="field" style="margin-top:0"><label>출발점</label>
+          <div class="seg" id="routeFrom"><button type="button" data-from="owned" class="on">보유 드래곤</button><button type="button" data-from="starter">기본 드래곤(1~2티어)</button></div></div>
+      </div>
+      <p class="note" id="routeNote"></p>
+    </div>
+    <div style="margin-top:14px" id="routeOut"></div>
+  </section>
+
+  <!-- ══════════ 시도·비용 ══════════ -->
+  <section class="view" id="view-tries" hidden>
+    <div class="phead"><div><div class="eyebrow">Attempts &amp; Cost</div><h1>몇 번 돌려야 할까?</h1><p>조합 확률과 1회 교배시간을 넣으면 기대 시도 횟수, 확신도별 필요 횟수, 총 소요 시간과 모래시계 비용을 계산합니다. 교배 조합 카드의 <b>시도 계산</b> 버튼을 누르면 값이 자동으로 채워집니다.</p></div></div>
+    <div class="two">
+      <div class="card"><h2>입력</h2>
+        <div class="field" style="margin-top:0"><label for="tryP">조합 확률 (%)</label><input class="inp" id="tryP" type="number" min="0.001" max="100" step="0.01" value="10"></div>
+        <div class="row">
+          <div class="field"><label for="tryH">1회 교배시간</label><div class="row"><input class="inp" id="tryH" type="number" min="0" max="99" value="4" aria-label="시간"><input class="inp" id="tryM" type="number" min="0" max="59" value="0" aria-label="분"></div><span class="hint">시간 / 분 (로얄클래스·길드 버프 적용값을 넣으세요)</span></div>
+          <div class="field"><label for="trySkip">즉시 완료 비용 <span class="hint">모래시계/회</span></label><input class="inp" id="trySkip" type="number" min="0" max="999" value="30"></div>
+        </div>
+        <div class="field" id="tryGaugeField" hidden><label for="tryGauge">확정 게이지 <span class="hint">이벤트 화면의 누적 게이지 (교배시간 1분당 1)</span></label><input class="inp" id="tryGauge" type="number" min="0" max="100000" value="0"></div>
+        <div id="tryFrom" class="note"></div>
+      </div>
+      <div class="card" id="tryOut"></div>
+    </div>
+    <div class="card" style="margin-top:14px"><h2>누적 성공 확률</h2><div style="overflow-x:auto"><table class="tbl m-rows m-tries" id="tryTable"></table></div></div>
+  </section>
+
+  <!-- ══════════ 교배 타이머 ══════════ -->
+  <section class="view" id="view-timer" hidden>
+    <div class="phead"><div><div class="eyebrow">Breeding Timer</div><h1>교배 타이머</h1><p>게임에 표시된 남은 시간을 넣어 두면 끝나는 시각을 알려줍니다. 부모를 함께 기록하면 그 시간에 나올 수 있는 드래곤을 좁혀 보여줍니다. 알림을 허용하면 이 페이지가 열려 있을 때 완료를 알립니다.</p></div>
+      <button class="btn" id="notifBtn" type="button">🔔 완료 알림 허용</button></div>
+    <div class="card"><h2>새 타이머</h2>
+      <div class="row">
+        <div class="field" style="margin-top:0"><label for="tmLabel">이름 <span class="hint">예: 라파엘 도전 1</span></label><input class="inp" id="tmLabel" type="text" placeholder="타이머 이름"></div>
+        <div class="field" style="margin-top:0"><label>게임에 표시된 교배시간 <span class="hint">시간 / 분</span></label><div class="row"><input class="inp" id="tmH" type="number" min="0" max="99" value="0" aria-label="시간" placeholder="시간"><input class="inp" id="tmM" type="number" min="0" max="59" value="0" aria-label="분" placeholder="분"></div></div>
+        <div class="field" style="margin-top:0"><label>이미 지난 시간 <span class="hint">선택 · 시간 / 분</span></label><div class="row"><input class="inp" id="tmEH" type="number" min="0" max="99" value="0" aria-label="지난 시간"><input class="inp" id="tmEM" type="number" min="0" max="59" value="0" aria-label="지난 분"></div></div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="tmAInput">부모 A <span class="hint">선택</span></label><div class="search sm" id="tmABox"><span class="ico">①</span><input class="inp" id="tmAInput" type="text" placeholder="이름 검색" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="tmAList" aria-autocomplete="list"><div class="dd" id="tmAList" role="listbox" hidden></div></div></div>
+        <div class="field"><label for="tmBInput">부모 B <span class="hint">선택</span></label><div class="search sm" id="tmBBox"><span class="ico">②</span><input class="inp" id="tmBInput" type="text" placeholder="이름 검색" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="tmBList" aria-autocomplete="list"><div class="dd" id="tmBList" role="listbox" hidden></div></div></div>
+      </div>
+      <div class="row" style="margin-top:12px;align-items:center"><span class="note" id="tmCands" style="margin:0"></span><button class="btn primary" id="tmAdd" type="button" style="flex:0 0 auto">타이머 추가</button></div>
+    </div>
+    <div class="timers" id="timers" style="margin-top:14px"></div>
+  </section>
+
+  <!-- ══════════ 내 컬렉션 ══════════ -->
+  <section class="view" id="view-collection" hidden>
+    <div class="phead"><div><div class="eyebrow">My Collection</div><h1>내 컬렉션</h1><p>보유 드래곤을 등록하면 도감 진행률과, 지금 가진 드래곤만으로 얻을 수 있는 드래곤을 확률 높은 순으로 보여줍니다.</p></div>
+      <button class="btn gold" id="ownedBtn2" type="button">✓ 보유 드래곤 등록</button></div>
+    <div class="two">
+      <div class="card"><h2>진행률</h2><div id="colProg"></div></div>
+      <div class="card"><h2>속성별</h2><div class="prog" id="colByEl"></div></div>
+    </div>
+    <div class="card" style="margin-top:14px"><h2>지금 얻을 수 있는 드래곤 <span class="hint" id="colMissHint"></span></h2><ul class="miss" id="colMiss"></ul></div>
+    <div class="card" style="margin-top:14px"><h2>교배로는 얻을 수 없는 드래곤</h2><p class="note" style="margin:0 0 8px">탐험·이벤트·상점 등 다른 경로로만 얻는 드래곤입니다.</p><div class="chips" id="colNoBreed"></div></div>
+  </section>
+
+  <!-- ══════════ 콜로세움 상위 방어덱 ══════════ -->
+  <section class="view" id="view-colo" hidden>
+    <div class="hero">
+      <div class="eyebrow">🏟 Colosseum</div>
+      <h1>콜로세움 <em>상위 방어덱</em></h1>
+      <p>시즌별 랭킹 1~20위의 방어팀을 기록하고, 드래곤별 채용 수와 자리, 팀 평균 점수를 집계합니다. 점수는 승률이 아니라 랭킹 점수이고 표본이 20팀이라, 자주 쓰인 드래곤의 수치만 참고하세요.</p>
+    </div>
+    <div class="row season">
+      <div class="field" style="margin:0"><label for="coloSeason">시즌</label><select class="inp" id="coloSeason"></select></div>
+      <p class="note" id="coloMeta" style="margin:0 0 8px"></p>
+    </div>
+    <div class="summary" id="coloSummary"></div>
+    <div class="two">
+      <div class="card"><h2>드래곤별 채용</h2><div style="overflow-x:auto"><table class="tbl m-rows m-dragons" id="coloDragons"></table></div></div>
+      <div class="card"><h2>자리별 채용 1순위</h2><div id="coloSlots"></div><h2 style="margin-top:16px">자주 쓰인 조합</h2><div id="coloCombos"></div></div>
+    </div>
+    <div class="card" style="margin-top:14px"><h2>1~20위 방어팀</h2><div style="overflow-x:auto"><table class="tbl m-rows m-colo" id="coloTeams"></table></div><p class="note">폴리모프·크로마·스킨 형태는 같은 종으로 셉니다. "등수 변동"은 직전 기록과 견준 같은 테이머의 순위 변화(▲ 올라감, ▼ 내려감, NEW 는 직전 20위에 없던 테이머)이고, 테이머 이름의 ?는 아직 확인하지 못한 이름입니다.</p></div>
+  </section>
+
+  <!-- ══════════ 아레나 랭킹 ══════════ -->
+  <section class="view" id="view-arena" hidden>
+    <div class="hero">
+      <div class="eyebrow">⚔ Arena</div>
+      <h1>아레나 <em>랭킹</em></h1>
+      <p>시즌별 아레나 랭킹 1~20위의 테이머와 점수를 기록합니다. 아레나는 방어덱이 공개되지 않아 순위·점수와 순위 사이의 점수 차만 싣습니다.</p>
+    </div>
+    <div class="row season">
+      <div class="field" style="margin:0"><label for="arenaSeason">시즌</label><select class="inp" id="arenaSeason"></select></div>
+      <p class="note" id="arenaMeta" style="margin:0 0 8px"></p>
+    </div>
+    <div class="summary" id="arenaSummary"></div>
+    <div class="card" style="margin-top:14px"><h2>1~20위</h2><div style="overflow-x:auto"><table class="tbl m-rows m-arena" id="arenaTeams"></table></div><p class="note">"위와 차"는 바로 위 순위와의 점수 차, "등수 변동"은 직전 기록과 견준 같은 테이머의 순위 변화(▲ 올라감, ▼ 내려감, NEW 는 직전 20위에 없던 테이머)입니다. 테이머 이름의 ?는 아직 확인하지 못한 이름입니다.</p></div>
+  </section>
+
+  <!-- ══════════ 아레나 통계 ══════════ -->
+  <section class="view" id="view-meta" hidden>
+    <div class="hero">
+      <div class="eyebrow">📊 Arena Meta</div>
+      <h1>아레나 <em>통계</em></h1>
+      <p>게임 안 아레나 통계 창을 상위 구간 기준으로 옮겨 적었습니다. 드래곤마다 승률·픽률·밴율, 실제로 많이 끼는 젬 세트 조합과 보주, 상대하기 어려운 드래곤(카운터)과 같이 쓰면 좋은 드래곤(시너지)을 볼 수 있습니다.</p>
+    </div>
+    <div class="row season">
+      <div class="field" style="margin:0"><label for="metaSeason">시즌</label><select class="inp" id="metaSeason"></select></div>
+      <div class="field" style="margin:0"><label for="metaTier">구간</label><select class="inp" id="metaTier"></select></div>
+      <div class="field" style="margin:0"><label for="metaSort">정렬</label><select class="inp" id="metaSort"><option value="pick">픽률</option><option value="win">승률</option><option value="ban">밴율</option><option value="name">이름</option></select></div>
+      <div class="field" style="margin:0"><label for="metaQ">찾기</label><input class="inp" id="metaQ" type="search" placeholder="드래곤 이름" autocomplete="off"></div>
+    </div>
+    <p class="note" id="metaMeta" style="margin:0 0 10px"></p>
+    <div class="two" id="metaTrend"></div>
+    <div class="card" style="margin-top:14px"><h2>드래곤별 <span class="cnt mono" id="metaCount"></span></h2><div style="overflow-x:auto"><table class="tbl m-rows m-meta" id="metaTable"></table></div>
+      <p class="note">행을 누르면 젬 세트 조합·보주별 승률·카운터·시너지가 열립니다. 승률은 표본이 적은 드래곤일수록 크게 흔들리므로 픽률과 함께 보세요. 세트는 "2세트+4세트"처럼 6칸을 채우는 조합입니다.</p></div>
+  </section>
+
+  <!-- ══════════ 방문자 통계 (관리자용: 탭에 없고 #stats 로만 열림, 키가 있어야 보임) ══════════ -->
+  <section class="view" id="view-stats" hidden>
+    <div class="phead"><div><div class="eyebrow">Admin</div><h1>방문자 통계</h1><p>집계 서버가 날짜별로 센 방문자·페이지뷰입니다. 키를 아는 사람만 볼 수 있고, 키는 이 브라우저에만 저장됩니다.</p></div></div>
+    <div class="card"><div class="row"><div class="field" style="margin:0;flex:1 1 220px"><label for="statsKey">통계 키</label><input class="inp" id="statsKey" type="password" placeholder="집계 서버의 키" autocomplete="off"></div><button class="btn primary" id="statsLoad" type="button">불러오기</button><button class="btn" id="statsForget" type="button">키 지우기</button></div>
+      <div id="statsOut" style="margin-top:12px"></div></div>
+  </section>
+
+  <!-- ══════════ 뽑기 계산 ══════════ -->
+  <section class="view" id="view-gacha" hidden>
+    <div class="phead"><div><div class="eyebrow">Gacha</div><h1>뽑기 기대 비용</h1><p>공식 확률표와 천장(120회 전설·10회 영웅 확정, 픽업은 천장에서 50%·200회 확정)을 그대로 계산해, 목표 드래곤을 몇 번 안에 얻을 수 있는지 보여줍니다.</p></div></div>
+    <div class="two">
+      <div class="card"><h2>조건</h2>
+        <div class="seg" id="gaKind" role="group" aria-label="뽑기 종류"><button type="button" data-v="premium" class="on">고급 뽑기</button><button type="button" data-v="pickup">스페셜 픽업</button></div>
+        <div class="field"><label for="gaTarget">목표</label><select class="inp" id="gaTarget"></select></div>
+        <div class="row">
+          <div class="field"><label for="gaPity">전설 안 나온 횟수 <span class="hint">지금까지 연속</span></label><input class="inp" id="gaPity" type="number" min="0" max="119" value="0"></div>
+          <div class="field" id="gaHeroField"><label for="gaHeroPity">영웅 안 나온 횟수</label><input class="inp" id="gaHeroPity" type="number" min="0" max="9" value="0"></div>
+          <div class="field" id="gaGaugeField" hidden><label for="gaGauge">픽업 누적 뽑기 횟수 <span class="hint">200회 확정 게이지</span></label><input class="inp" id="gaGauge" type="number" min="0" max="199" value="0"></div>
+        </div>
+        <p class="note" id="gaNote"></p>
+      </div>
+      <div class="card" id="gaOut"></div>
+    </div>
+    <div class="card" style="margin-top:14px"><h2>횟수별 획득 확률</h2><div style="overflow-x:auto"><table class="tbl m-rows m-gacha" id="gaTable"></table></div><p class="note">"누적 확률"은 그 횟수 안에 목표를 한 번이라도 얻을 확률입니다. 뽑기마다 전설이 안 나오면 천장 카운트가 오르고, 전설(알이든 보주든)이 나오면 0으로 돌아가는 규칙을 그대로 따릅니다.</p></div>
+
+    <div class="card" style="margin-top:14px"><h2>테이머 암즈 스킨 계산기</h2>
+      <p class="note" style="margin:0 0 10px">스킨 뽑기 등급 확률(영웅 1% · 희귀 2% · 고급 17% · 일반 80%) → 같은 등급 3개로 합성해 한 단계 위 도전(일반→고급 25%, 고급→희귀 20%, 희귀→영웅 15%, 영웅→전설 10%; 실패하면 메인 재료 1개만 남고 2개 소멸) → 등급별 "스킬 최종 피해 증가"(일반 1% · 고급 1.3% · 희귀 1.7~2% · 영웅 2.5~3% · 전설 4~5%, 균등)까지 공식 확률표와 게임 도움말 규칙 그대로 계산합니다.</p>
+      <form id="armsForm" class="gem-form" onsubmit="return false">
+        <div class="field"><label for="armsN">뽑기 횟수</label><input class="inp" id="armsN" type="number" min="1" max="5000" value="100"></div>
+        <div class="field"><label for="armsDia">뽑기 1회 다이아 <span class="hint">1회 300 · 10회 3,000 · 100회 30,000</span></label><input class="inp" id="armsDia" type="number" min="0" value="300"></div>
+        <div class="field"><label>총 비용</label><div class="inp" id="armsCost" style="display:flex;align-items:center;font-family:var(--mono)"></div></div>
+      </form>
+      <p class="note" style="margin:8px 0 0">200회 뽑을 때마다 영웅 암즈 스킨 선택 상자 1개가 확정으로 나오며(게임 뽑기 화면), 계산에 포함했습니다.</p>
+      <div id="armsOut"></div>
+    </div>
+  </section>
+
+  <!-- ══════════ 공식 확률표 ══════════ -->
+  <section class="view" id="view-odds" hidden>
+    <div class="phead"><div><div class="eyebrow">Official Odds</div><h1>공식 확률표</h1><p id="oddsIntro"></p></div></div>
+    <div class="fchips" id="oddsSec" role="group" aria-label="절"></div>
+    <div id="oddsBody"></div>
+  </section>
+
+  <!-- ══════════ 드래곤 도감 ══════════ -->
+  <section class="view" id="view-dex" hidden>
+    <div class="phead"><div><div class="eyebrow">Dragon Dex</div><h1>드래곤 도감</h1><p>132종의 속성·능력치·스킬·교배 정보를 한곳에서. 카드를 누르면 상세가 열리고, 거기서 교배 조합·최단 루트·젬 추천으로 바로 이어집니다. 능력치는 만렙 50·성체·5성 기준입니다.</p></div></div>
+    <div class="card dex-tools">
+      <div class="search sm"><span class="ico">🔍</span><input class="inp" id="dexQ" type="text" placeholder="이름 검색" autocomplete="off" aria-label="드래곤 이름 검색"></div>
+      <div class="fchips" id="dexEl" role="group" aria-label="속성"></div>
+      <div class="row">
+        <div class="seg" id="dexRar" role="group" aria-label="희귀도"><button type="button" data-v="all" class="on">전체</button><button type="button" data-v="3">레어</button><button type="button" data-v="4">에픽</button><button type="button" data-v="5">레전더리</button></div>
+        <div class="seg" id="dexGet" role="group" aria-label="획득"><button type="button" data-v="all" class="on">전체</button><button type="button" data-v="breed">교배 가능</button><button type="button" data-v="other">교배 불가</button><button type="button" data-v="own">보유</button></div>
+        <select class="inp" id="dexSort" aria-label="정렬"><option value="tier">티어 높은순</option><option value="name">이름순</option><option value="sum">능력치 합</option><option value="hp">체력</option><option value="atk">공격</option><option value="def">방어</option><option value="mag">마력</option><option value="mr">저항</option><option value="spd">속도</option></select>
+      </div>
+    </div>
+    <p class="note" id="dexCount"></p>
+    <div class="dex-grid" id="dexGrid"></div>
+  </section>
+
+  <!-- ══════════ 젬 강화 · 추천 ══════════ -->
+  <section class="view" id="view-gems" hidden>
+    <div class="phead"><div><div class="eyebrow">Gems &amp; Orbs</div><h1>젬 강화 · 추천</h1><p>드래곤을 고르면 젬 6종마다 어떤 서브 옵션이 그 드래곤에게 값진지 순서를 매깁니다. 강화 계산기는 공식 확률표로 목표 단계까지의 기대 상승과 비용을 계산합니다.</p></div></div>
+    <div class="two">
+      <div class="card"><h2>드래곤별 서브 옵션 추천</h2>
+        <div class="search sm" id="gemDBox"><span class="ico">🐉</span><input class="inp" id="gemDInput" type="text" placeholder="드래곤 이름 검색" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="gemDList" aria-autocomplete="list"><div class="dd" id="gemDList" role="listbox" hidden></div></div>
+        <div id="gemReco" style="margin-top:10px"></div>
+      </div>
+      <div class="card"><h2>젬 강화 계산기</h2>
+        <form id="gemForm" onsubmit="return false">
+          <div class="gem-form">
+            <div class="field"><label for="gemSlot">젬 종류</label><select class="inp" id="gemSlot"><option value="hp">체력 젬</option><option value="atk">공격 젬</option><option value="def">방어 젬</option><option value="mag">마력 젬</option><option value="mr">저항 젬</option><option value="spd">속도 젬</option></select></div>
+            <div class="field"><label for="gemRar">희귀도</label><select class="inp" id="gemRar"><option value="5">전설 · 옵션 3개</option><option value="4">영웅 · 옵션 2개</option><option value="3">희귀 · 옵션 1개</option></select></div>
+            <div class="field"><label for="gemCur">현재 단계</label><select class="inp" id="gemCur"><option value="0">+0</option><option value="1">+1</option><option value="2">+2</option><option value="3">+3</option><option value="4">+4</option></select></div>
+            <div class="field"><label for="gemTo">목표 단계</label><select class="inp" id="gemTo"><option value="1">+1</option><option value="2">+2</option><option value="3">+3</option><option value="4">+4</option><option value="5" selected>+5</option></select></div>
+          </div>
+          <div class="gem-form" id="gemSubs" style="margin-top:8px">
+            <div class="field"><label>지금 붙은 옵션 1</label><select class="inp" aria-label="서브 옵션 1"></select></div>
+            <div class="field"><label>옵션 2</label><select class="inp" aria-label="서브 옵션 2"></select></div>
+            <div class="field"><label>옵션 3</label><select class="inp" aria-label="서브 옵션 3"></select></div>
+          </div>
+          <p class="note" style="margin:10px 0 4px"><b>목표</b> — 어떤 옵션이 목표 단계까지 최소 얼마나 오르길 원하는지 (능력치는 +20 단위, 확률 옵션은 %p)</p>
+          <div class="gem-form" id="gemTargets">
+            <div class="field"><label>목표 옵션 1</label><select class="inp" data-t="0" aria-label="목표 옵션 1"></select></div>
+            <div class="field"><label>최소 상승</label><input class="inp" type="number" min="0" step="0.1" data-tv="0" placeholder="예: 80"></div>
+            <div class="field"><label>목표 옵션 2 <span class="hint">선택</span></label><select class="inp" data-t="1" aria-label="목표 옵션 2"></select></div>
+            <div class="field"><label>최소 상승</label><input class="inp" type="number" min="0" step="0.1" data-tv="1" placeholder="비우면 없음"></div>
+          </div>
+        </form>
+        <div id="gemCalc"></div>
+        <div id="gemGoal"></div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px"><h2>젬 규칙 요약 <span class="hint" style="font-family:var(--sans);font-size:12px;color:var(--faint);font-weight:600">하이브로 공식 확률 공지 기준</span></h2>
+      <div style="overflow-x:auto"><table class="tbl">
+        <tr><th>젬</th><th>붙을 수 있는 서브 옵션</th></tr>
+        <tr><td>체력 젬</td><td>공격 · 방어 · 속도 · 치명타 피해 · 더블 어택 · 트리플 어택</td></tr>
+        <tr><td>공격 젬</td><td>방어 · 마력 · 속도 · 치명타 피해 · 더블 어택 · 트리플 어택</td></tr>
+        <tr><td>방어 젬</td><td>공격 · 저항 · 속도 · 치명타 피해 · 더블 어택 · 트리플 어택</td></tr>
+        <tr><td>마력 젬</td><td>공격 · 저항 · 체력 · 치명타 피해 · 더블 어택 · 트리플 어택</td></tr>
+        <tr><td>저항 젬</td><td>마력 · 방어 · 체력 · 치명타 피해 · 더블 어택 · 트리플 어택</td></tr>
+        <tr><td>속도 젬</td><td>마력 · 저항 · 체력 · 치명타 피해 · 더블 어택 · 트리플 어택</td></tr>
+      </table></div>
+      <p class="note">강화 비용(게임 표시값): +1 6,876 · +2 32.6K · +3 67.1K · +4 약 262K · +5 약 862K 골드 (+0→+5 합계 약 1.23M). 전설 젬 주능력치는 +0 150 → +1 170 → +2 200 → +3 230 → +4 260 → +5 300. 강화할 때마다 서브 옵션 하나가 오르며, 게임의 젬 강화 창은 옵션 이름 옆 +·++ 표시와 괄호 숫자로 지금까지 오른 횟수와 누적 상승분을 보여줍니다.</p>
+      <p class="note"><b>젬 점수</b> = 주능력치 ÷ 10 + 능력치 서브 옵션 ÷ 10 + 더블 어택 % × 5 + 치명타 피해 % × 2 + 트리플 어택 % × 10 (소수점 버림). 게임의 젬 9개(점수 22~61)로 검증한 식이며, 젬 버닝 이벤트의 55점·60점 기준과 필터의 점수 구간(0~15 / 16~20 / 21~23 / 24~25 / 26~)이 이 점수입니다. 슬롯 순서는 체력·공격·방어·마력·저항·속도이고 각 칸에는 그 종류의 젬만 낍니다.</p>
+      <h3 style="font-family:var(--serif);font-size:15px;color:var(--gold);margin:14px 0 8px">세트 효과 <span class="hint" style="font-family:var(--sans);font-size:12px;color:var(--faint);font-weight:600">같은 세트 젬을 2개 또는 4개 끼면 발동 · 게임 젬 필터의 세트 설명(2026-09-15)</span></h3>
+      <div style="overflow-x:auto"><table class="tbl m-rows m-sets" id="gemSets"></table></div>
+      <p class="note">드래곤은 젬 6칸에 종류별로 하나씩 낍니다. 서브 옵션은 최대 3개이며 희귀 젬은 1개, 영웅 젬은 2개, 전설 젬은 3개를 갖고 시작합니다. 희귀·영웅 젬은 3개가 될 때까지 강화 단계마다 옵션이 하나씩 추가되고(아직 없는 옵션 중 균등), 그 뒤 단계부터 기존 옵션이 오릅니다. 상승 폭은 능력치 20·30·40·50(각 33.2%·33.2%·33.2%·0.3%), 치명타 피해 1.0~2.0%, 더블 어택 0.5~1.0%, 트리플 어택 0.2~0.5%입니다.</p>
+    </div>
+  </section>
+</main>
+
+<dialog id="dexDlg" aria-label="드래곤 상세"></dialog>
+<dialog id="metaDlg" aria-label="아레나 통계 상세"></dialog>
+
+<dialog id="ownedDlg" aria-labelledby="ownedTitle">
+  <div class="dlg-head">
+    <h2 id="ownedTitle">보유 드래곤 <span class="cnt mono" id="ownedDlgCnt"></span></h2>
+    <button class="btn sm" id="ownedClearAll" type="button">전체 해제</button>
+    <button class="btn sm" id="ownedClose" type="button">닫기</button>
+  </div>
+  <div class="dlg-body">
+    <div class="search sm"><span class="ico">🔍</span><input class="inp" id="ownedSearch" type="text" placeholder="이름으로 찾기" autocomplete="off" aria-label="보유 드래곤 검색"></div>
+    <div class="own-grid" id="ownedGrid"></div>
+  </div>
+</dialog>
+
+<footer class="site-foot wrap">
+  드래곤빌리지3의 비공식 팬 제작 계산기입니다. 게임 데이터와 일러스트의 권리는 하이브로(Highbrow)에 있으며, 권리자의 요청이 있으면 즉시 삭제합니다.<br>
+  계산 결과는 1회 교배의 이론 확률이며, 실제 결과는 표본이 쌓여야 이론값에 가까워집니다. 보유 드래곤·타이머는 이 브라우저에만 저장됩니다.
+</footer>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="data/dragons.js?v=202609160129"></script>
+<script src="data/meta.js?v=202609160129"></script>
+<script src="data/events.js?v=202609160129"></script>
+<script src="data/colo.js?v=202609160129"></script>
+<script src="data/arena.js?v=202609160129"></script>
+<script src="data/arena-stats.js?v=202609160129"></script>
+<script src="data/dex.js?v=202609160129"></script>
+<script src="data/gems.js?v=202609160129"></script>
+<script src="data/gacha.js?v=202609160129"></script>
+<script src="data/odds.js?v=202609160129"></script>
+<script src="js/engine.js?v=202609160129"></script>
+<script src="js/app.js?v=202609160129"></script>
+</body>
+</html>
